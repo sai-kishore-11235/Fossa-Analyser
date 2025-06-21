@@ -15,4 +15,4 @@ jobs:
       - name: Run FOSSA Scan
         uses: fossas/fossa-action@main
         with:
-          fossa-api-key: ${{ secrets.FOSSA_API_KEY }} 
+          api-key: ${{ secrets.FOSSA_API_KEY }} 
