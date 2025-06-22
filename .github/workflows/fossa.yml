@@ -15,10 +15,11 @@ jobs:
       - name: Create FOSSA config
         run: |
           cat <<EOF > .fossa.yml
-          version: 2
-          cli:
-            analyze:
-              branch: \${{ github.ref_name }}
+          version: 3
+          project:
+            locator: custom+55099/github.com/sai-kishore-11235/Fossa-Analyser
+          revision:
+            name: \${{ github.ref_name }}
           EOF
 
       - name: Run FOSSA Scan
