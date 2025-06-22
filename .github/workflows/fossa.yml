@@ -12,18 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Create FOSSA config
-        run: |
-          cat <<EOF > .fossa.yml
-          version: 3
-          project:
-            locator: custom+55099/github.com/sai-kishore-11235/Fossa-Analyser
-          revision:
-            name: \${{ github.ref_name }}
-          EOF
-
       - name: Run FOSSA Scan
         uses: fossas/fossa-action@main
         with:
-          api-key: ${{ secrets.FOSSA_API_KEY }}
+          api-key: ${{ secrets.FOSSA_API_KEY }} 
           run-tests: true
