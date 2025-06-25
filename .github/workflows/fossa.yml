@@ -43,6 +43,8 @@ jobs:
           fi
 
       - name: Commit changes if FOSSA failed
+        permissions:
+          contents: write
         if: failure()
         run: |
           git config --global user.name "github-actions[bot]"
@@ -51,6 +53,8 @@ jobs:
           git commit -m "chore: update recommended package from FOSSA scan failure" || echo "No changes to commit"
 
       - name: Create Pull Request
+        permissions:
+          contents: write
         if: failure()
         uses: peter-evans/create-pull-request@v6
         with:
