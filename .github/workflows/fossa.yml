@@ -14,8 +14,7 @@ jobs:
 
       - name: Install FOSSA CLI
         run: |
-          export FOSSA_INSTALL_DIR="$HOME/.fossa/bin"
-          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
           echo "$HOME/.fossa/bin" >> $GITHUB_PATH
 
       - name: Run FOSSA Scan
