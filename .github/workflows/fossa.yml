@@ -13,15 +13,41 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run FOSSA Scan
-        uses: fossas/fossa-action@main
-        with:
-          api-key: ${{ secrets.FOSSA_API_KEY }}
+        id: fossa
+        run: |
+          set -o pipefail
+          fossa analyze 2>&1 | tee fossa_output.txt
+          fossa test 2>&1 | tee -a fossa_output.txt
 
-      - name: Run FOSSA Analyze
-        run: fossa analyze
-        env:
-          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
-      - name: Run FOSSA Test
-        run: fossa test
-        env:
-          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+      - name: Parse FOSSA Output and Update package.json
+        if: failure()
+        run: |
+          # Extract recommended package and version from FOSSA output
+          recommended=$(grep -oE 'Recommended package: [^ ]+' fossa_output.txt | head -n1 | awk '{print $3}')
+          if [ -n "$recommended" ]; then
+            pkg=$(echo $recommended | cut -d'@' -f1)
+            ver=$(echo $recommended | cut -d'@' -f2)
+            echo "Updating $pkg to version $ver in package.json"
+            jq --arg pkg "$pkg" --arg ver "$ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
+            npm install
+            echo "Updated $pkg to $ver due to FOSSA recommendation." > FOSSA_REPORT.md
+          else
+            echo "No recommended package found in FOSSA output." > FOSSA_REPORT.md
+          fi
+
+      - name: Commit changes if FOSSA failed
+        if: failure()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json FOSSA_REPORT.md || true
+          git commit -m "chore: update recommended package from FOSSA scan failure" || echo "No changes to commit"
+
+      - name: Create Pull Request
+        if: failure()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update recommended package from FOSSA scan failure"
+          title: "FOSSA scan failed - recommended package update"
+          body: "This PR was created automatically because the FOSSA scan failed. The recommended package update has been applied. See FOSSA_REPORT.md for details."
+          branch: fossa-failure-recommended-update
