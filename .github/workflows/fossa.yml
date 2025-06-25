@@ -31,17 +31,17 @@ jobs:
       - name: Parse FOSSA Output and Update package.json
         if: failure()
         run: |
-          # Extract recommended package and version from FOSSA output
-          recommended=$(grep -oE 'Recommended package: [^ ]+' fossa_output.txt | head -n1 | awk '{print $3}')
-          if [ -n "$recommended" ]; then
-            pkg=$(echo $recommended | cut -d'@' -f1)
-            ver=$(echo $recommended | cut -d'@' -f2)
-            echo "Updating $pkg to version $ver in package.json"
-            jq --arg pkg "$pkg" --arg ver "$ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
+          # Extract vulnerable package and fixed version from FOSSA output
+          vuln_pkg=$(grep -oE 'Critical vulnerability detected on [^ ]+' fossa_output.txt | head -n1 | awk '{print $5}')
+          fixed_ver=$(grep -A 1 "Critical vulnerability detected on" fossa_output.txt | grep 'Fixed in:' | head -n1 | awk '{print $3}')
+          if [ -n "$vuln_pkg" ] && [ -n "$fixed_ver" ]; then
+            pkg=$(echo $vuln_pkg | cut -d'@' -f1)
+            echo "Updating $pkg to version $fixed_ver in package.json"
+            jq --arg pkg "$pkg" --arg ver "$fixed_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
             npm install
-            echo "Updated $pkg to $ver due to FOSSA recommendation." > FOSSA_REPORT.md
+            echo "Updated $pkg to $fixed_ver due to FOSSA vulnerability fix recommendation." > FOSSA_REPORT.md
           else
-            echo "No recommended package found in FOSSA output." > FOSSA_REPORT.md
+            echo "No vulnerable package or fixed version found in FOSSA output." > FOSSA_REPORT.md
           fi
 
       - name: Commit changes if FOSSA failed
