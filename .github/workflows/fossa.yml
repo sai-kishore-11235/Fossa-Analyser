@@ -12,8 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install FOSSA CLI
+        run: |
+          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+          echo "$HOME/.fossa/bin" >> $GITHUB_PATH
+
       - name: Run FOSSA Scan
         id: fossa
+        env:
+          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
         run: |
           set -o pipefail
           fossa analyze 2>&1 | tee fossa_output.txt
