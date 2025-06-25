@@ -21,3 +21,7 @@ jobs:
         run: fossa analyze
         env:
           FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+      - name: Run FOSSA Test
+        run: fossa test
+        env:
+          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
