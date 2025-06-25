@@ -37,8 +37,8 @@ jobs:
           echo "---- DEBUG: FOSSA OUTPUT ----"
           cat fossa_output.txt
           echo "---- DEBUG: Extracted values ----"
-          vuln_pkg=$(grep -oE 'Critical vulnerability detected on [^ ]+' fossa_output.txt | head -n1 | awk '{print $6}')
-          fixed_ver=$(grep -A 1 "Critical vulnerability detected on" fossa_output.txt | grep 'Fixed in:' | head -n1 | awk '{print $3}')
+          vuln_pkg=$(grep -Eo '[a-zA-Z0-9._-]+@[0-9.]+' fossa_output.txt | head -n1)
+          fixed_ver=$(grep 'Fixed in:' fossa_output.txt | head -n1 | awk '{print $3}')
           echo "vuln_pkg: $vuln_pkg"
           echo "fixed_ver: $fixed_ver"
           if [ -n "$vuln_pkg" ] && [ -n "$fixed_ver" ]; then
