@@ -19,3 +19,5 @@ jobs:
 
       - name: Run FOSSA Analyze
         run: fossa analyze
+        with:
+          fossa-api-key: ${{ secrets.FOSSA_API_KEY }}
