@@ -16,3 +16,6 @@ jobs:
         uses: fossas/fossa-action@main
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
+
+      - name: Run FOSSA Analyze
+        run: fossa analyze
