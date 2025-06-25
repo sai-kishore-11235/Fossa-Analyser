@@ -34,11 +34,16 @@ jobs:
       - name: Parse FOSSA Output and Update package.json
         if: failure()
         run: |
-          # Extract vulnerable package and fixed version from FOSSA output
-          vuln_pkg=$(grep -oE 'Critical vulnerability detected on [^ ]+' fossa_output.txt | head -n1 | awk '{print $5}')
+          echo "---- DEBUG: FOSSA OUTPUT ----"
+          cat fossa_output.txt
+          echo "---- DEBUG: Extracted values ----"
+          vuln_pkg=$(grep -oE 'Critical vulnerability detected on [^ ]+' fossa_output.txt | head -n1 | awk '{print $6}')
           fixed_ver=$(grep -A 1 "Critical vulnerability detected on" fossa_output.txt | grep 'Fixed in:' | head -n1 | awk '{print $3}')
+          echo "vuln_pkg: $vuln_pkg"
+          echo "fixed_ver: $fixed_ver"
           if [ -n "$vuln_pkg" ] && [ -n "$fixed_ver" ]; then
             pkg=$(echo $vuln_pkg | cut -d'@' -f1)
+            echo "pkg: $pkg"
             echo "Updating $pkg to version $fixed_ver in package.json"
             jq --arg pkg "$pkg" --arg ver "$fixed_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
             npm install
