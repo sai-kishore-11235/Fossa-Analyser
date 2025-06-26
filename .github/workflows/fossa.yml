@@ -32,25 +32,42 @@ jobs:
           fossa analyze 2>&1 | tee fossa_output.txt
           fossa test 2>&1 | tee -a fossa_output.txt
 
-      - name: Parse FOSSA Output and Update package.json
+      - name: Get latest secure version from OpenAI and update package.json
         if: failure()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo "---- DEBUG: FOSSA OUTPUT ----"
-          cat fossa_output.txt
-          echo "---- DEBUG: Extracted values ----"
+          # Extract vulnerable package and CVE from FOSSA output
           vuln_pkg=$(grep -Eo '[a-zA-Z0-9._-]+@[0-9.]+' fossa_output.txt | head -n1)
-          fixed_ver=$(grep 'Fixed in:' fossa_output.txt | head -n1 | awk '{print $3}')
-          echo "vuln_pkg: $vuln_pkg"
-          echo "fixed_ver: $fixed_ver"
-          if [ -n "$vuln_pkg" ] && [ -n "$fixed_ver" ]; then
-            pkg=$(echo $vuln_pkg | cut -d'@' -f1)
-            echo "pkg: $pkg"
-            echo "Updating $pkg to version $fixed_ver in package.json"
-            jq --arg pkg "$pkg" --arg ver "$fixed_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
+          cve=$(grep -Eo 'CVE-[0-9]{4}-[0-9]+' fossa_output.txt | head -n1)
+          pkg=$(echo $vuln_pkg | cut -d'@' -f1)
+          echo "Detected package: $pkg"
+          echo "Detected CVE: $cve"
+
+          # Compose prompt for OpenAI
+          prompt="What is the latest secure version of $pkg that fixes $cve for npm?"
+
+          # Call OpenAI API
+          response=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d '{
+              "model": "gpt-3.5-turbo",
+              "messages": [{"role": "user", "content": "'"$prompt"'"}],
+              "max_tokens": 50
+            }')
+
+          # Extract version from OpenAI response (assumes response like: "The latest secure version is 4.20.0.")
+          latest_ver=$(echo "$response" | jq -r '.choices[0].message.content' | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
+
+          echo "OpenAI recommended version: $latest_ver"
+
+          if [ -n "$latest_ver" ]; then
+            jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
             npm install
-            echo "Updated $pkg to $fixed_ver due to FOSSA vulnerability fix recommendation." > FOSSA_REPORT.md
+            echo "Updated $pkg to $latest_ver due to OpenAI recommendation." > FOSSA_REPORT.md
           else
-            echo "No vulnerable package or fixed version found in FOSSA output." > FOSSA_REPORT.md
+            echo "No version found from OpenAI response." > FOSSA_REPORT.md
           fi
 
       - name: Commit changes if FOSSA failed
