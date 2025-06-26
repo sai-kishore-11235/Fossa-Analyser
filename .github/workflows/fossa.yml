@@ -57,8 +57,15 @@ jobs:
               "max_tokens": 50
             }')
 
-          # Extract version from OpenAI response (assumes response like: "The latest secure version is 4.20.0.")
-          latest_ver=$(echo "$response" | jq -r '.choices[0].message.content' | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
+          echo "OpenAI API raw response: $response"
+
+          error_msg=$(echo "$response" | jq -r '.error.message // empty')
+          if [ -n "$error_msg" ]; then
+            echo "OpenAI API error: $error_msg"
+          fi
+
+          # Extract version from OpenAI response
+          latest_ver=$(echo "$response" | jq -r '.choices[0].message.content' | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 
           echo "OpenAI recommended version: $latest_ver"
 
