@@ -68,20 +68,34 @@ jobs:
           fi
 
           # Try to extract version from Gemini response
-          latest_ver=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text' | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
-
-          echo "Gemini recommended version: $latest_ver"
+          gemini_text=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text')
+          echo "Gemini response text: $gemini_text"
+          latest_ver=$(echo "$gemini_text" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+          echo "Gemini recommended version: '$latest_ver'"
 
           if [ -n "$latest_ver" ]; then
-            echo "Checking if $pkg is in dependencies..."
+            echo "Checking if $pkg is in dependencies or devDependencies..."
             if jq -e --arg pkg "$pkg" '.dependencies[$pkg]' package.json > /dev/null; then
-              echo "$pkg found in dependencies."
-              if jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json; then
+              dep_type="dependencies"
+            elif jq -e --arg pkg "$pkg" '.devDependencies[$pkg]' package.json > /dev/null; then
+              dep_type="devDependencies"
+            else
+              dep_type=""
+            fi
+
+            if [ -n "$dep_type" ]; then
+              echo "$pkg found in $dep_type."
+              echo "Before update:"
+              cat package.json
+              if jq --arg pkg "$pkg" --arg ver "$latest_ver" ".$dep_type[\$pkg]=\$ver" package.json > tmp.json; then
                 mv tmp.json package.json
+                echo "After update:"
+                cat package.json
                 if npm install; then
-                  echo "Updated $pkg to $latest_ver due to Gemini recommendation." > FOSSA_REPORT.md
+                  echo "Updated $pkg to $latest_ver in $dep_type due to Gemini recommendation." > FOSSA_REPORT.md
                 else
                   echo "npm install failed after updating $pkg to $latest_ver" > FOSSA_REPORT.md
+                  npm install || true
                   exit 3
                 fi
               else
@@ -89,11 +103,12 @@ jobs:
                 exit 4
               fi
             else
-              echo "$pkg not found in dependencies. Adding it now."
+              echo "$pkg not found in dependencies or devDependencies. Adding it now."
               if npm install "$pkg@$latest_ver"; then
                 echo "Added $pkg@$latest_ver to dependencies." > FOSSA_REPORT.md
               else
                 echo "Failed to add $pkg@$latest_ver to dependencies." > FOSSA_REPORT.md
+                npm install || true
                 exit 6
               fi
             fi
