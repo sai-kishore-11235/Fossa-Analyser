@@ -48,24 +48,27 @@ jobs:
           prompt="What is the latest secure version of $pkg that fixes $cve for npm?"
 
           # Call Gemini API
-          response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API_KEY }}" \
+          response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API_KEY" \
             -H 'Content-Type: application/json' \
             -X POST \
             -d '{
               "contents": [
-                { "parts": [ { "text": "'$prompt'" } ] }
+                { "parts": [ { "text": "'"$prompt"'" } ] }
               ]
             }')
 
           echo "Gemini API raw response: $response"
 
+          # Check for error in response
           error_msg=$(echo "$response" | jq -r '.error.message // empty')
           if [ -n "$error_msg" ]; then
             echo "Gemini API error: $error_msg"
+            echo "Gemini API error: $error_msg" > FOSSA_REPORT.md
+            exit 1
           fi
 
-          # Extract version from Gemini response (assuming version in text)
-          latest_ver=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text' | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+          # Try to extract version from Gemini response
+          latest_ver=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text' | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
 
           echo "Gemini recommended version: $latest_ver"
 
@@ -74,7 +77,9 @@ jobs:
             npm install
             echo "Updated $pkg to $latest_ver due to Gemini recommendation." > FOSSA_REPORT.md
           else
-            echo "No version found from Gemini response." > FOSSA_REPORT.md
+            echo "No version found from Gemini response. Full response below:" > FOSSA_REPORT.md
+            echo "$response" >> FOSSA_REPORT.md
+            exit 2
           fi
 
       - name: Commit changes if FOSSA failed
