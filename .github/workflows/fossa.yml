@@ -44,37 +44,37 @@ jobs:
           echo "Detected package: $pkg"
           echo "Detected CVE: $cve"
 
-          # Compose prompt for OpenAI
+          # Compose prompt for Gemini
           prompt="What is the latest secure version of $pkg that fixes $cve for npm?"
 
-          # Call OpenAI API
-          response=$(curl -s https://api.openai.com/v1/chat/completions \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
+          # Call Gemini API
+          response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API_KEY }}" \
+            -H 'Content-Type: application/json' \
+            -X POST \
             -d '{
-              "model": "gpt-4o",
-              "messages": [{"role": "user", "content": "'"$prompt"'"}],
-              "max_tokens": 50
+              "contents": [
+                { "parts": [ { "text": "'$prompt'" } ] }
+              ]
             }')
 
-          echo "OpenAI API raw response: $response"
+          echo "Gemini API raw response: $response"
 
           error_msg=$(echo "$response" | jq -r '.error.message // empty')
           if [ -n "$error_msg" ]; then
-            echo "OpenAI API error: $error_msg"
+            echo "Gemini API error: $error_msg"
           fi
 
-          # Extract version from OpenAI response
-          latest_ver=$(echo "$response" | jq -r '.choices[0].message.content' | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+          # Extract version from Gemini response (assuming version in text)
+          latest_ver=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text' | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 
-          echo "OpenAI recommended version: $latest_ver"
+          echo "Gemini recommended version: $latest_ver"
 
           if [ -n "$latest_ver" ]; then
             jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
             npm install
-            echo "Updated $pkg to $latest_ver due to OpenAI recommendation." > FOSSA_REPORT.md
+            echo "Updated $pkg to $latest_ver due to Gemini recommendation." > FOSSA_REPORT.md
           else
-            echo "No version found from OpenAI response." > FOSSA_REPORT.md
+            echo "No version found from Gemini response." > FOSSA_REPORT.md
           fi
 
       - name: Commit changes if FOSSA failed
