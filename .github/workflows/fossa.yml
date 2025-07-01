@@ -73,9 +73,24 @@ jobs:
           echo "Gemini recommended version: $latest_ver"
 
           if [ -n "$latest_ver" ]; then
-            jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json && mv tmp.json package.json
-            npm install
-            echo "Updated $pkg to $latest_ver due to Gemini recommendation." > FOSSA_REPORT.md
+            # Check if package exists in dependencies
+            if jq -e --arg pkg "$pkg" '.dependencies[$pkg]' package.json > /dev/null; then
+              if jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json; then
+                mv tmp.json package.json
+                if npm install; then
+                  echo "Updated $pkg to $latest_ver due to Gemini recommendation." > FOSSA_REPORT.md
+                else
+                  echo "npm install failed after updating $pkg to $latest_ver" > FOSSA_REPORT.md
+                  exit 3
+                fi
+              else
+                echo "jq failed to update package.json" > FOSSA_REPORT.md
+                exit 4
+              fi
+            else
+              echo "Package $pkg not found in dependencies in package.json" > FOSSA_REPORT.md
+              exit 5
+            fi
           else
             echo "No version found from Gemini response. Full response below:" > FOSSA_REPORT.md
             echo "$response" >> FOSSA_REPORT.md
