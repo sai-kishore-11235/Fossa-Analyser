@@ -73,8 +73,9 @@ jobs:
           echo "Gemini recommended version: $latest_ver"
 
           if [ -n "$latest_ver" ]; then
-            # Check if package exists in dependencies
+            echo "Checking if $pkg is in dependencies..."
             if jq -e --arg pkg "$pkg" '.dependencies[$pkg]' package.json > /dev/null; then
+              echo "$pkg found in dependencies."
               if jq --arg pkg "$pkg" --arg ver "$latest_ver" '.dependencies[$pkg]=$ver' package.json > tmp.json; then
                 mv tmp.json package.json
                 if npm install; then
@@ -88,8 +89,13 @@ jobs:
                 exit 4
               fi
             else
-              echo "Package $pkg not found in dependencies in package.json" > FOSSA_REPORT.md
-              exit 5
+              echo "$pkg not found in dependencies. Adding it now."
+              if npm install "$pkg@$latest_ver"; then
+                echo "Added $pkg@$latest_ver to dependencies." > FOSSA_REPORT.md
+              else
+                echo "Failed to add $pkg@$latest_ver to dependencies." > FOSSA_REPORT.md
+                exit 6
+              fi
             fi
           else
             echo "No version found from Gemini response. Full response below:" > FOSSA_REPORT.md
