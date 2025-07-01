@@ -32,10 +32,10 @@ jobs:
           fossa analyze 2>&1 | tee fossa_output.txt
           fossa test 2>&1 | tee -a fossa_output.txt
 
-      - name: Get latest secure version from OpenAI and update package.json
+      - name: Get latest secure version from Gemini and update package.json
         if: failure()
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Extract vulnerable package and CVE from FOSSA output
           vuln_pkg=$(grep -Eo '[a-zA-Z0-9._-]+@[0-9.]+' fossa_output.txt | head -n1)
