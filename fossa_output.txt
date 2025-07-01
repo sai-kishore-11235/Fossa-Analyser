@@ -1,0 +1,102 @@
+[ 1 Waiting / 1 Running / 0 Completed ]
+[ 31 Waiting / 4 Running / 1 Completed ]
+[ 28 Waiting / 4 Running / 4 Completed ]
+[ 24 Waiting / 4 Running / 8 Completed ]
+[ 10 Waiting / 4 Running / 22 Completed ]
+Analyzing npm project at /home/runner/work/Fossa-Analyser/Fossa-Analyser/
+[ 9 Waiting / 4 Running / 24 Completed ]
+[ 0 Waiting / 2 Running / 35 Completed ]
+[ 0 Waiting / 1 Running / 36 Completed ]
+
+Scan Summary
+------------
+fossa-cli version 3.10.11 (revision abbef2812d52 compiled with ghc-9.8)
+fossa endpoint server version: 4.28.69
+
+1 projects scanned;  0 skipped,  1 succeeded,  0 failed,  1 analysis warning
+
+* npm project in "/home/runner/work/Fossa-Analyser/Fossa-Analyser/": succeeded with 1 warning
+-
+
+Notes
+-----
+* Some projects may not appear in the summary if they were filtered during discovery.
+You can run `fossa list-targets` to see all discoverable projects.
+
+* Some projects analysis may be skipped, due to default filters.
+Learn more: https://github.com/fossas/fossa-cli/blob/v3.10.11/docs/references/subcommands/analyze.md#what-are-the-default-path-filters
+
+* You can pass `--debug` option to eagerly show all warning and failure messages.
+
+You can also view analysis summary with warning and error messages at: "/tmp/fossa-analyze-scan-summary.txt"
+------------
+Organization: (55099) does not support reachability. Skipping reachability analysis upload.
+For reachability, refer to: https://docs.fossa.com/docs/reachability
+
+Using project name: `https://github.com/sai-kishore-11235/Fossa-Analyser`
+Using revision: `0a298f98511912bdafa3c55d408a6da0b6631978`
+Using branch: `master`
+============================================================
+
+    View FOSSA Report:
+    https://app.fossa.com/projects/custom%2b55099%2fgithub.com%2fsai-kishore-11235%2fFossa-Analyser/refs/branch/master/0a298f98511912bdafa3c55d408a6da0b6631978
+
+============================================================
+
+Using project name: `https://github.com/sai-kishore-11235/Fossa-Analyser`
+Using revision: `0a298f98511912bdafa3c55d408a6da0b6631978`
+
+[ Checking build completion for 0a298f98511912bdafa3c55d408a6da0b6631978... ]
+[ Waiting for build completion (revision 0a298f98511912bdafa3c55d408a6da0b6631978)... last status: StatusCreated ]
+[ Waiting for build completion (revision 0a298f98511912bdafa3c55d408a6da0b6631978)... last status: StatusCreated ]
+[ Waiting for issue scan completion... ]
+
+
+[ERROR] 
+
+  ========================================================================
+  Tested Following Project:
+  ========================================================================
+
+
+  Project Title: https://github.com/sai-kishore-11235/Fossa-Analyser
+  Project Revision: 0a298f98511912bdafa3c55d408a6da0b6631978
+  Project Visibility: private
+  Project Targets:
+  - npm: [package.json]
+
+
+  SECURITY ISSUES (Total 4)
+
+  ========================================================================
+  Vulnerability (Total 4)
+  ========================================================================
+  ⚑ Critical vulnerability detected on express@4.1.0
+  CVE ID: CVE-2024-43796
+  Fixed in: 4.20.0    
+  More information: https://app.fossa.com/projects/custom%2B55099%2Fgithub.com%2Fsai-kishore-11235%2FFossa-Analyser/refs/branch/master/0a298f98511912bdafa3c55d408a6da0b6631978/issues/security/9880786
+
+  ⚑ Critical vulnerability detected on express@4.1.0
+  CVE ID: CVE-2022-24999
+  Fixed in: 4.20.0    
+  More information: https://app.fossa.com/projects/custom%2B55099%2Fgithub.com%2Fsai-kishore-11235%2FFossa-Analyser/refs/branch/master/0a298f98511912bdafa3c55d408a6da0b6631978/issues/security/9880785
+
+  ⚑ Critical vulnerability detected on express@4.1.0
+  CVE ID: CVE-2024-29041
+  Fixed in: 4.20.0    
+  More information: https://app.fossa.com/projects/custom%2B55099%2Fgithub.com%2Fsai-kishore-11235%2FFossa-Analyser/refs/branch/master/0a298f98511912bdafa3c55d408a6da0b6631978/issues/security/9880784
+
+  ⚑ Critical vulnerability detected on express@4.1.0
+  CVE ID: CVE-2014-6393
+  Fixed in: 4.20.0    
+  More information: https://app.fossa.com/projects/custom%2B55099%2Fgithub.com%2Fsai-kishore-11235%2FFossa-Analyser/refs/branch/master/0a298f98511912bdafa3c55d408a6da0b6631978/issues/security/9880783
+
+
+[ERROR] An issue occurred
+
+  *** Relevant Errors ***
+
+      [0;91mError: [0mThe scan has revealed issues. Number of issues found: 4
+
+
+
